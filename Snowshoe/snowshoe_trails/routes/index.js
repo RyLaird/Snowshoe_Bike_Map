@@ -33,3 +33,25 @@ router.get('/data', function (req, res) {
       res.end();
   });
 });
+
+/* GET map page */
+router.get('/map', function(req, res) {
+  var client = new Client(conString); // Setup Postgres Client
+  client.connect(); // connect to the client
+  var query = client.query(new Query(testQuery)); // Run Test Query
+  query.on("row", function (row, result) {
+      result.addRow(row);
+  });
+  // Pass the result to the map page
+  query.on("end", function (result) {
+      var data = result.rows[0].row_to_json // Save the JSON as variable data
+      res.render('map', {
+          title: "Rider Map", // Give a title to our page
+          jsonData: data // Pass data to the View
+      });
+  });
+});
+
+
+//pseduo Post
+//after update re-submit get function
