@@ -1,4 +1,4 @@
-extends layout 
+extends layout
 block content
   ul
     li
@@ -6,29 +6,133 @@ block content
       |   
     |   
     li.dropdown
-      a.dropbtn(href='javascript:void(0)') Select Trail
+      a.dropbtn(href='javascript:void(0)') Trails by Difficulty 
       |     
       .dropdown-content   
-        div(name='difficulty', value='all') All
+        div(name='difficulty', id="all", value='all' checked) All
         |      
-        div(name='difficulty', value='beginner') Beginner
+        div(name='difficulty', id='beginner', value='beginner') Beginner
         | 
-        div(name='difficulty', value='intermediate') Intermediate 
+        div(name='difficulty', id='intermediate', value='intermediate') Intermediate 
         | 
-        div(name='difficulty', value='advanced') Advanced 
+        div(name='difficulty', id='advanced', value='advanced') Advanced 
         | 
-        div(name='difficulty', value='expert') Expert
+        div(name='difficulty', id='expert', value='expert') Expert
+    li.dropdown
+      a.dropbtn(href='javascript:void(0)') Find Location
+      |     
+      .dropdown-content   
+        div(name='location', id='location') Find My Location
+        div(name='location', id='reset') Remove Location
+      
   div#map
   script.
     var myData = !{JSON.stringify(jsonData)};
     // Create variable to hold map element, give initial settings to map
       var map = L.map('map',{ center: [38.41514, -79.98964], zoom: 15});
       // Add OpenStreetMap tile layer to map element
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      L.tileLayer('https://api.mapbox.com/styles/v1/rlaird2/ckrpnffat2ttc17rsnys15gnb/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicmxhaXJkMiIsImEiOiJja2JmN2x6aWIwc3VmMzVvNDl5Mzk1ejNuIn0.rrNaMaCy39_ntp7qPvp0dQ', {
+        attribution: 'Map data &copy; <a href=&quot;https://www.openstreetmap.org/&quot;>OpenStreetMap</a> contributors, <a href=&quot;https://creativecommons.org/licenses/by-sa/2.0/&quot;>CC-BY-SA</a>, Imagery &copy; <a href=&quot;https://www.mapbox.com/&quot;>Mapbox</a>'
       }).addTo(map);
-      // Add JSON to map
-      L.geoJson(myData,{
+
+      //- geojson for lift
+      var lift = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "name": "Ballhooter Bike Lift"
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                -79.98392343521118,
+                38.41474476109837
+              ],
+              [
+                -79.99456644058228,
+                38.411230799050685
+              ]
+            ]
+          }
+        }
+      ]
+    }
+    //- adding lift to the map and styling
+      L.geoJson(lift,{
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.name)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            this.fitBounds(this.getBounds())
+          });
+        },
+        style: function(feature) {
+          switch (feature.properties.name) {
+            case 'Ballhooter Bike Lift': return {color: "#bbbdbf", weight: 7};
+          }
+        }
+      }).addTo(map);
+
+      //- LatLng = [
+      //-   [-79.98392343521118, 38.41474476109837],
+      //-   [-79.99456644058228,38.411230799050685]
+      //- ];
+      //- var liftPoly = L.polyline(LatLng, {color:"#bbbdbf", weight: 7
+      //-         }).addTo(map)
+      //- var decorator = L.polylineDecorator(liftPoly, {
+      //-   patterns: [
+      //-   // defines a pattern of 10px-wide dashes, repeated every 20px on the line
+      //-   {offset: 0, repeat: 5, symbol: L.Symbol.dash({pixelSize: 5})}
+      //-   ]
+      //- }).addTo(map);
+
+      // set variable for all trails
+      allTrails = L.geoJson(myData,{
+          onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.f2 + ": "+ feature.properties.f3, {
+              maxWidth: "auto"
+            });
+            layer.on('mouseover', function (e) {
+              this.openPopup()
+            });
+            layer.on('mouseout', function (e) {
+              this.closePopup();
+            });
+            layer.on('click', function (e) {
+              map.fitBounds(this.getBounds())
+            });
+          },
+          style: function(feature) {
+            switch (feature.properties.f3) {
+              case 'beginner': return {color: "#33a448", weight: 2};
+              case 'intermediate' : return {color: "#3356a4", weight: 2};
+              case 'advanced': return {color: "#030904", weight: 2};
+              case 'expert': return {color:"#a4338f", weight: 2};
+            }
+          }
+      });
+    //-query dropdown and add all trails to map on All 
+    let allTrailsDrop = document.querySelector('#all');
+    allTrailsDrop.addEventListener('click',()=>{
+      allTrails.addTo(map)
+    });
+
+    //- on page load - load all trails
+    allTrails.addTo(map)
+
+      //- variable to filter beginner trails for dropdown
+      var beginnerTrails = L.geoJson(myData, {
+        filter: function(feature, layer) {
+          return feature.properties.f3 == 'beginner';
+        },
         onEachFeature: function (feature, layer) {
           layer.bindPopup(feature.properties.f2)
           layer.on('mouseover', function (e) {
@@ -40,15 +144,218 @@ block content
           layer.on('click', function (e) {
             map.fitBounds(this.getBounds())
           });
-        },
-        style: function(feature) {
+          },
+        style: function (feature) {
           switch (feature.properties.f3) {
-            case 'beginner': return {color: "#1ae582"};
-            case 'intermediate' : return {color: "#2441db"};
-            case 'advanced': return {color: "#2b0600"};
-            case 'expert': return {color:"#670068"};
+            case 'beginner': return {color: "#33a448"};
           }
         }
-      }).addTo(map);
+      });
+    //-query dropdown and add beginners trails
+    let begTrailsDrop = document.querySelector('#beginner');
+    begTrailsDrop.addEventListener('click',()=>{
+      map.removeLayer(allTrails)
+      map.removeLayer(intermediateTrails)
+      map.removeLayer(advancedTrails)
+      map.removeLayer(expertTrails)
+      beginnerTrails.addTo(map)
+    });
+
+      //- variable to filter intermediate trails for dropdown
+      var intermediateTrails = L.geoJson(myData, {
+        filter: function(feature, layer) {
+          return feature.properties.f3 == 'intermediate';
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.f2)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            map.fitBounds(this.getBounds())
+          });
+          },
+        style: function (feature) {
+          switch (feature.properties.f3) {
+            case 'intermediate': return {color: "#3356a4"};
+          }
+        }
+      });
+    //-query dropdown and add beginners trails
+    let interTrailsDrop = document.querySelector('#intermediate');
+    interTrailsDrop.addEventListener('click',()=>{
+      map.removeLayer(allTrails)
+      map.removeLayer(beginnerTrails)
+      map.removeLayer(advancedTrails)
+      map.removeLayer(expertTrails)
+      intermediateTrails.addTo(map)
+    });
+
+      //- variable to filter Advanced trails for dropdown
+      var advancedTrails = L.geoJson(myData, {
+        filter: function(feature, layer) {
+          return feature.properties.f3 == 'advanced';
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.f2)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            map.fitBounds(this.getBounds())
+          });
+          },
+        style: function (feature) {
+          switch (feature.properties.f3) {
+            case 'advanced': return {color: "#030904"};
+          }
+        }
+      });
+    //-query dropdown and add beginners trails
+    let advTrailsDrop = document.querySelector('#advanced');
+    advTrailsDrop.addEventListener('click',()=>{
+      map.removeLayer(allTrails)
+      map.removeLayer(beginnerTrails)
+      map.removeLayer(intermediateTrails)
+      map.removeLayer(expertTrails)
+      advancedTrails.addTo(map)
+    });
+
+          //- variable to filter Advanced trails for dropdown
+      var expertTrails = L.geoJson(myData, {
+        filter: function(feature, layer) {
+          return feature.properties.f3 == 'expert';
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.f2)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            map.fitBounds(this.getBounds())
+          });
+          },
+        style: function (feature) {
+          switch (feature.properties.f3) {
+            case 'expert': return {color: "#a4338f"};
+          }
+        }
+      });
+    //-query dropdown and add beginners trails
+    let expTrailsDrop = document.querySelector('#expert');
+    expTrailsDrop.addEventListener('click',()=>{
+      map.removeLayer(allTrails)
+      map.removeLayer(beginnerTrails)
+      map.removeLayer(intermediateTrails)
+      map.removeLayer(advancedTrails)
+      expertTrails.addTo(map)
+    });
     
-    
+    var locationMarker
+    var locationCircle
+    //- find user location
+    function onLocationFound(e) {
+      var radius = e.accuracy;
+
+      locationMarker = new L.marker(e.latlng)
+      map.addLayer(locationMarker)
+      locationMarker.bindPopup("You are within " + radius + " meters from this point").openPopup();
+
+      locationCircle = new L.circle(e.latlng, radius);
+      map.addLayer(locationCircle)
+    }
+
+    map.on('locationfound', onLocationFound);
+
+    function onLocationError(e) {
+      alert(e.message);
+    }
+
+
+    //- on dropdown selection find location
+    let locationDrop = document.querySelector('#location')
+    locationDrop.addEventListener('click', ()=>{
+      map.on('locationerror', onLocationError);
+      map.locate({setView: true, maxZoom: 16});
+    });
+
+    let resetDrop = document.querySelector('#reset')
+    resetDrop.addEventListener('click', ()=>{
+      map.setView([38.41514, -79.98964])
+      map.removeLayer(locationMarker)
+      map.removeLayer(locationCircle)
+    })
+
+    /**************************************ADD Legend to Map****************************************/
+    var legend = L.control({ position: "bottomright" });
+
+    legend.onAdd = function(map) {
+      var div = L.DomUtil.create("div", "legend");
+      //- div.innerHTML += "<h4>Showshoe </h4>";
+      div.innerHTML += '<i style="background: #1ae582"></i><span>Beginner</span><br>';
+      div.innerHTML += '<i style="background: #2441db"></i><span>Intermediate</span><br>';
+      div.innerHTML += '<i style="background: #2b0600"></i><span>Advanced</span><br>';
+      div.innerHTML += '<i style="background: #670068"></i><span>Expert</span><br>';
+      //- div.innerHTML += '<i class="icon" style="background-image: url(https://d30y9cdsu7xlg0.cloudfront.net/png/194515-200.png);background-repeat: no-repeat;"></i><span>Grænse</span><br>';
+      
+      
+
+      return div;
+    };
+
+    legend.addTo(map);
+
+    //- add lift icons along lift path
+    var liftIcon = L.icon({
+      iconUrl:"/lift_icon.png",
+      shadowUrl: "/shadow_icon.png",
+      iconSize: [40,40],
+      shadowSize: [35,35],
+      shadowAnchor: [4,25],
+      popupAnchor: [3,20]
+    });
+
+    L.marker([-79.98403072357178,38.41467750984024], {icon: liftIcon}).addTo(map);
+    L.marker([-79.98579025268555,38.41412268457233], {icon: liftIcon}).addTo(map);
+    L.marker([-79.98795747756957,38.413450163384084], {icon: liftIcon}).addTo(map);
+    L.marker([-79.9901032447815,38.41272719612521], {icon: liftIcon}).addTo(map);
+    L.marker([-79.99244213104248,38.41190334089571], {icon: liftIcon}).addTo(map);
+    L.marker([-79.99435186386108,38.411230799050685], {icon: liftIcon}).addTo(map);
+
+
+
+
+
+    //- function showLegend(layer) {
+    //- var item = ".legend > span:contains(" + layer + ")";
+    //- $(item).show();
+    //- }
+
+    //- function hideLegend(layer) {
+    //-     var item = ".legend > span:contains(" + layer + ")";
+    //-     $(item).hide();
+    //- }
+
+    //- map.on('overlayadd', function (eventLayer) {
+    //-     showLegend(eventLayer.name);
+    //- });
+
+    //- map.on('overlayremove', function (eventLayer) {
+    //-     hideLegend(eventLayer.name);
+    //- });
+
+
+    //- $.each(control.getOverlays(), function (index, value) {
+    //-     if (!value) {
+    //-         hideLegend(index);
+    //-     }
+    //- });

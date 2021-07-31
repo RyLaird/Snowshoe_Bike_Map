@@ -1,0 +1,60 @@
+extends layout 
+block content
+  ul
+    li
+        a(href='..') Home
+      |   
+    |   
+    li.dropdown
+      a.dropbtn(href='javascript:void(0)') Select Trail
+      |     
+      .dropdown-content   
+        div(name='difficulty', value='all') All
+        |      
+        div(name='beginner', id='beginner',value='beginner') Beginner
+        | 
+        div(name='difficulty', value='intermediate') Intermediate 
+        | 
+        div(name='difficulty', value='advanced') Advanced 
+        | 
+        div(name='difficulty', value='expert') Expert
+  div#map
+  script.
+    var myData = !{JSON.stringify(jsonData)};
+    // Create variable to hold map element, give initial settings to map
+      var map = L.map('map',{ center: [38.41514, -79.98964], zoom: 15});
+      // Add OpenStreetMap tile layer to map element
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      }).addTo(map);
+      // Add JSON to map
+      var allTrails = L.geoJson(myData);
+      var beginnerTrails = L.geoJson(myData, {
+        filter: function(feature, layer) {
+          return feature.properties.f3 == 'beginner';
+        },
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.f2)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            map.fitBounds(this.getBounds())
+          });
+          },
+        style: function (feature) {
+          color: "#1ae582";
+        }
+      });
+    
+    $('beginner').click(function() {
+      map.addLayer(beginnerTrails)
+    });
+    
+    
+//- case 'intermediate' : return {color: "#2441db"};
+//- case 'advanced': return {color: "#2b0600"};
+//- case 'expert': return {color:"#670068"};

@@ -1,0 +1,152 @@
+extends layout 
+block content
+  ul
+    li
+        a(href='..') Home
+      |   
+    |   
+    li.dropdown
+      a.dropbtn(href='javascript:void(0)') Update Rider Map
+      |     
+      .dropdown-content   
+        div(name='statusButton', id = "updateStatus") Update Trail Status
+        |      
+        div(name='featureadd', id='featureadd') Create New Feature
+        | 
+        div(name='updateEmergency', id='emergencyadd') Update Emergency Access
+
+  #statusDiv
+    a.close(id="closeButtonTrail")
+    form(action='/' method='POST')
+        label(for='fname') First Name
+        |     
+        input#fname(type='text', name='firstname', placeholder='Your name..')
+        |     
+        label(for='lname') Last Name
+        |     
+        input#lname(type='text', name='lastname', placeholder='Your last name..')
+        |     
+        label(for='trail') Select Trail
+        |     
+        select#trail(name='trail' required)
+          option(value='Easy Street') Easy Street       
+          option(value='Raging Bull') Raging Bull   
+          option(value='Lower Dreamweaver') Lower Dreamweaver
+          option(value='Lucid') Lucid
+          option(value='Flume Access Road') Flume Access Road
+          option(value='Upper Dreamweaver') Upper Dreamweaver
+          option(value="Hootenanny Access Road") Hootenanny Access Road
+          option(value="Dirt Beaver") Dirt Beaver
+          option(value="A Trail") A Trail
+          option(value="B Trail") B Trail
+          option(value="I Trail") I Trail
+          option(value="Trail DD") Trail DD
+          option(value="Trail J") Trail J
+          option(value="H Trail") H Trail
+          option(value="G Trail") G Trail
+          option(value="F Trail") F Trail
+          option(value="E Trail") E Trail
+          option(value="D Trail") D Trail
+          option(value="O Trail") O Trail
+          option(value="N Trail") N Trail
+          option(value="M Trail") M Trail
+          option(value="S Trail") S Trail
+          option(value="Trail P") Trail P               
+          | 
+        label(for='status') Open/Closed
+      
+        select#status(name='status' required='')
+          option(value='Open') Open
+          option(value='Closed') Closed
+        |     
+        input(type='submit', name='submit', value='Submit')
+  #newFeature
+    a.close(id="closeButtonFeat")
+    form(action='/statusupdate' method='POST')
+        label(for='fname') First Name
+        |     
+        input#fname(type='text', name='firstname', placeholder='Your name..')
+        |     
+        label(for='lname') Last Name
+        |     
+        input#lname(type='text', name='lastname', placeholder='Your last name..')
+        
+        label(for='featureName') Feature Name
+        
+        input#featname(type='text', name='featname', placeholder='Big Jump....')
+        
+        label(for='featuretype') Feature Type
+        
+        select#featureType(name='ftype' required)
+          option(value='Jump') Jump      
+          option(value='Wood Ramp') Wood                 
+          |     
+        input(type='submit', value='Submit')
+
+  #map
+  script.
+    var updateStatus = document.querySelector('#updateStatus');
+    sl = document.querySelector('#statusDiv')
+    updateStatus.addEventListener('click',()=>{
+      if (sl.style.display == 'none') {
+        sl.style.display = 'block';
+      } else {
+        sl.style.display ='none';
+      }
+    });
+
+    var updateFeature = document.querySelector('#featureadd');
+    fa = document.querySelector('#newFeature')
+    updateFeature.addEventListener('click', ()=>{
+      if (fa.style.display == 'none') {
+        fa.style.display = 'block';
+      } else {
+        fa.style.display = 'none';
+      }
+    });
+
+    var trailClose = document.querySelector('#closeButtonTrail');
+    trailClose.addEventListener('click', ()=>{
+      sl.style.display = 'none'
+      fa.style.display = 'none'
+    });
+    var featClose = document.querySelector('#closeButtonFeat');
+    featClose.addEventListener('click', ()=>{
+      fa.style.display = 'none'
+      sl.style.display = 'none'
+    })
+
+      var myData = !{JSON.stringify(jsonData)};
+    // Create variable to hold map element, give initial settings to map
+      var map = L.map('map',{ center: [38.41514, -79.98964], zoom: 15});
+      // Add OpenStreetMap tile layer to map element
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      }).addTo(map);
+
+
+
+      // set variable for all trails
+      L.geoJson(myData,{
+          onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.f2)
+            layer.on('mouseover', function (e) {
+              this.openPopup()
+            });
+            layer.on('mouseout', function (e) {
+              this.closePopup();
+            });
+            layer.on('click', function (e) {
+              map.fitBounds(this.getBounds())
+            });
+          },
+          style: function(feature) {
+            switch (feature.properties.f3) {
+              case 'beginner': return {color: "#1ae582", weight: 2};
+              case 'intermediate' : return {color: "#2441db", weight: 2};
+              case 'advanced': return {color: "#2b0600", weight: 2};
+              case 'expert': return {color:"#670068", weight: 2};
+            }
+          }
+      }).addTo(map);
+

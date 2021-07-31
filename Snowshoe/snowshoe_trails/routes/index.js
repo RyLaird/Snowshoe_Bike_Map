@@ -15,7 +15,7 @@ var testQuery = "SELECT row_to_json(fc) FROM (SELECT 'FeatureCollection' As type
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index', { title: 'Welcome To Snowshoe Bike Park' });
 });
 
 module.exports = router;
@@ -53,5 +53,24 @@ router.get('/map', function(req, res) {
 });
 
 
-//pseduo Post
-//after update re-submit get function
+// Get employee page
+router.get('/employee', function(req, res) {
+  var client = new Client(conString);
+  client.connect();
+  var query = client.query(new Query(testQuery));
+  query.on("row", function (row, result) {
+    result.addRow(row);
+  });
+  //Pass result to employee page
+  query.on("end", function (result) {
+    var data =result.rows[0].row_to_json
+    res.render('employee', {
+      title: "Employee Map",
+      jsonData: data
+    });
+  });
+});
+
+
+
+
