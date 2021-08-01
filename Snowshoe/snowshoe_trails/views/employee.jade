@@ -10,34 +10,38 @@ block content
       |     
       .dropdown-content   
         div(name='statusButton', id = "updateStatus") Update Trail Status
-        |      
-        div(name='featureadd', id='featureadd') Create New Feature
-        | 
+        div(name='difficultyButton', id="updateDifficulty") Update Trail Difficulty      
+        div(name='featureadd', id='featureadd') Create New Feature 
         div(name='updateEmergency', id='emergencyadd') Update Emergency Access
 
   #statusDiv
     a.close(id="closeButtonTrail")
-    form(action='/updateStatus' method='POST')
-        label(for='fname') First Name
-        |     
-        input#fname(type='text', name='firstname', placeholder='Your name..')
-        |     
-        label(for='lname') Last Name
-        |     
-        input#lname(type='text', name='lastname', placeholder='Your last name..')
-        |     
-        label(for='trail') Select Trail
-        |     
+    form(action='/updateStatus' method='POST')     
+        label(for='trail') Select Trail     
         select#trail(name='trail' required)
           for trail in trails
-            option=trail.properties.f2           
-        | 
+            option=trail.properties.f2            
         label(for='status') Open/Closed
-        select#status(name='status' required) 
+        select#status(name='status') 
           option(value='open') Open
           option(value='closed') Closed
-        |     
+        label(for='message') Status Message    
+        input#statusMessage(type='text', name='message', placeholder='Trail construction...')   
         input(type='submit', name='submit', value='Submit')
+  #difficultyDiv 
+    a.close(id="closeButtonDifficulty")
+    form(action='/updateDifficulty' method='POST')
+      label(for='trail') Select Trail
+      select#trail(name='trail' required)
+        for trail in trails 
+          option=trail.properties.f2
+      label(for='difficulty') Choose Difficulty 
+      select#difficulty(name='difficulty')
+        option(value='beginner') Beginner
+        option(value='intermediate') Intermediate 
+        option(value='advanced') Advanced 
+        option(value='expert') Expert
+      input(type='submit', name='submit', value='Submit')
   #newFeature
     a.close(id="closeButtonFeat")
     form(action='/statusupdate' method='POST')
@@ -73,6 +77,16 @@ block content
       }
     });
 
+    var updateDifficulty = document.querySelector('#updateDifficulty');
+    ud = document.querySelector('#difficultyDiv')
+    updateDifficulty.addEventListener('click', ()=>{
+      if (ud.style.display == 'none') {
+        ud.style.display = 'block';
+      } else {
+        ud.style.display = 'none';
+      }
+    });
+
     var updateFeature = document.querySelector('#featureadd');
     fa = document.querySelector('#newFeature')
     updateFeature.addEventListener('click', ()=>{
@@ -87,11 +101,19 @@ block content
     trailClose.addEventListener('click', ()=>{
       sl.style.display = 'none'
       fa.style.display = 'none'
+      ud.style.display = 'none'
     });
     var featClose = document.querySelector('#closeButtonFeat');
     featClose.addEventListener('click', ()=>{
       fa.style.display = 'none'
       sl.style.display = 'none'
+      ud.style.display = 'none'
+    });
+    var diffClose = document.querySelector('#closeButtonDifficulty');
+    diffClose.addEventListener('click', ()=>{
+      ud.style.display = 'none'
+      sl.style.display = 'none'
+      fa.style.display = 'none'
     })
       var myData = !{JSON.stringify(jsonData)};
     // Create variable to hold map element, give initial settings to map

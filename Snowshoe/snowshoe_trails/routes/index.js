@@ -1,5 +1,5 @@
 var express = require('express');
-var router = express.Router();
+var router = express();
 router.use(express.urlencoded({ extended: true })); // <--- middleware configuration
 
 
@@ -79,7 +79,7 @@ const  { Pool } = require("pg");
 
 const pool = new Pool({
   user: "postgres",
-  host: "localhost:5432",
+  host: "localhost",
   database: "snowshoe",
   password: "admin",
   port: 5432
@@ -89,18 +89,32 @@ router.post('/updateStatus', function(req,res) {
   // var client = new Client(conString);
   // client.connect()
   console.log(req.body)
-  const trail = [req.body.status, req.body.trail]
-  const statusQuery = "UPDATE snowshoetrails SET closed = $1 WHERE (name = $2)";
+  const trail = [req.body.status, req.body.message, req.body.trail]
+  const statusQuery = "UPDATE snowshoetrails SET closed = $1, message = $2 WHERE (name = $3)";
   pool.query(statusQuery, trail, function(err, result) {
     if (err) {
       console.error(err)
     }
     else {
-      alert('Your update was successful')
-      res.redirect('/employee')
+      res.status(200).send({ message: "Trail Updated Successfully!" });
+      // res.redirect('/employee')
     }
 
     // res.status(200).send({ message: "Product Updated Successfully!" });
+  });
+});
+
+router.post('/updateDifficulty', function(req, res) {
+  console.log(req.body)
+  const trail = [req.body.difficulty, req.body.trail]
+  const difficultyQuery = "UPDATE snowshoetrails SET difficulty = $1 WHERE (name = $2)";
+  pool.query(difficultyQuery, trail, function(err, result) {
+    if(err) {
+      console.error(err)
+    }
+    else {
+      res.status(200).send({message: "Trail Updated Succesfully!"})
+    }
   });
 });
 
