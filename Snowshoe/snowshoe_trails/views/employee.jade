@@ -17,7 +17,7 @@ block content
 
   #statusDiv
     a.close(id="closeButtonTrail")
-    form(action='/' method='POST')
+    form(action='/updateStatus' method='POST')
         label(for='fname') First Name
         |     
         input#fname(type='text', name='firstname', placeholder='Your name..')
@@ -29,35 +29,13 @@ block content
         label(for='trail') Select Trail
         |     
         select#trail(name='trail' required)
-          option(value='Easy Street') Easy Street       
-          option(value='Raging Bull') Raging Bull   
-          option(value='Lower Dreamweaver') Lower Dreamweaver
-          option(value='Lucid') Lucid
-          option(value='Flume Access Road') Flume Access Road
-          option(value='Upper Dreamweaver') Upper Dreamweaver
-          option(value="Hootenanny Access Road") Hootenanny Access Road
-          option(value="Dirt Beaver") Dirt Beaver
-          option(value="A Trail") A Trail
-          option(value="B Trail") B Trail
-          option(value="I Trail") I Trail
-          option(value="Trail DD") Trail DD
-          option(value="Trail J") Trail J
-          option(value="H Trail") H Trail
-          option(value="G Trail") G Trail
-          option(value="F Trail") F Trail
-          option(value="E Trail") E Trail
-          option(value="D Trail") D Trail
-          option(value="O Trail") O Trail
-          option(value="N Trail") N Trail
-          option(value="M Trail") M Trail
-          option(value="S Trail") S Trail
-          option(value="Trail P") Trail P               
-          | 
+          for trail in trails
+            option=trail.properties.f2           
+        | 
         label(for='status') Open/Closed
-      
-        select#status(name='status' required='')
-          option(value='Open') Open
-          option(value='Closed') Closed
+        select#status(name='status' required) 
+          option(value='open') Open
+          option(value='closed') Closed
         |     
         input(type='submit', name='submit', value='Submit')
   #newFeature
@@ -115,7 +93,6 @@ block content
       fa.style.display = 'none'
       sl.style.display = 'none'
     })
-
       var myData = !{JSON.stringify(jsonData)};
     // Create variable to hold map element, give initial settings to map
       var map = L.map('map',{ center: [38.41514, -79.98964], zoom: 15});
@@ -124,6 +101,7 @@ block content
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       }).addTo(map);
 
+      console.log(myData)
 
 
       // set variable for all trails
