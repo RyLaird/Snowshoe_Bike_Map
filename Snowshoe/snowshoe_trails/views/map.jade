@@ -32,7 +32,7 @@ block content
       var map = L.map('map',{ center: [38.41514, -79.98964], zoom: 15});
       // Add OpenStreetMap tile layer to map element
       L.tileLayer('https://api.mapbox.com/styles/v1/rlaird2/ckrpnffat2ttc17rsnys15gnb/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicmxhaXJkMiIsImEiOiJja2JmN2x6aWIwc3VmMzVvNDl5Mzk1ejNuIn0.rrNaMaCy39_ntp7qPvp0dQ', {
-        attribution: 'Map data &copy; <a href=&quot;https://www.openstreetmap.org/&quot;>OpenStreetMap</a> contributors, <a href=&quot;https://creativecommons.org/licenses/by-sa/2.0/&quot;>CC-BY-SA</a>, Imagery &copy; <a href=&quot;https://www.mapbox.com/&quot;>Mapbox</a>'
+        attribution: 'Map data &copy; <a href=&quot;https://www.openstreetmap.org/&quot;>OpenStreetMap</a> contributors, <a href=&quot;https://creativecommons.org/licenses/by-sa/2.0/&quot;>CC-BY-SA</a>, Imagery &copy; <a href=&quot;https://www.mapbox.com/&quot;>Mapbox</a> <div>Icons made by <a href="" title="ultimatearm">ultimatearm</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>'
       }).addTo(map);
 
       //- geojson for lift
@@ -97,7 +97,7 @@ block content
       // set variable for all trails
       allTrails = L.geoJson(myData,{
           onEachFeature: function (feature, layer) {
-            layer.bindPopup(feature.properties.f2 + ": "+ feature.properties.f3, {
+            layer.bindPopup((feature.properties.f2.bold()).toUpperCase() + "\n" + "<font color='#808080'><i> Skill Level:</i></font>"+ feature.properties.f3 + "<font color='#808080'><i>  Status:</i></font>" + feature.properties.f6, {
               maxWidth: "auto"
             });
             layer.on('mouseover', function (e) {
@@ -111,11 +111,15 @@ block content
             });
           },
           style: function(feature) {
-            switch (feature.properties.f3) {
-              case 'beginner': return {color: "#33a448", weight: 2};
-              case 'intermediate' : return {color: "#3356a4", weight: 2};
-              case 'advanced': return {color: "#030904", weight: 2};
-              case 'expert': return {color:"#a4338f", weight: 2};
+            if (feature.properties.f5 == 'open') {
+              switch (feature.properties.f3) {
+                case 'beginner': return {color: "#33a448", weight: 2};
+                case 'intermediate' : return {color: "#3356a4", weight: 2};
+                case 'advanced': return {color: "#030904", weight: 2};
+                case 'expert': return {color:"#a4338f", weight: 2};
+              }
+            } else {
+              return {color: "#BB061C", weight: 2};
             }
           }
       });
@@ -146,8 +150,12 @@ block content
           });
           },
         style: function (feature) {
-          switch (feature.properties.f3) {
-            case 'beginner': return {color: "#33a448"};
+          if (feature.properties.f5 == 'open') {
+            switch (feature.properties.f3) {
+              case 'beginner': return {color: "#33a448"};
+            }
+          } else {
+            return {color: "#BB061C", weight: 2};
           }
         }
       });
@@ -301,6 +309,8 @@ block content
     legend.onAdd = function(map) {
       var div = L.DomUtil.create("div", "legend");
       //- div.innerHTML += "<h4>Showshoe </h4>";
+      div.innerHTML += '<i style="background: #bbbdbf"></i><span>Bike Lift</span><br>';
+      div.innerHTML += '<i style="background: #BB061C"></i><span>Closed</span><br>';
       div.innerHTML += '<i style="background: #1ae582"></i><span>Beginner</span><br>';
       div.innerHTML += '<i style="background: #2441db"></i><span>Intermediate</span><br>';
       div.innerHTML += '<i style="background: #2b0600"></i><span>Advanced</span><br>';
@@ -316,7 +326,7 @@ block content
 
     //- add lift icons along lift path
     var liftIcon = L.icon({
-      iconUrl:"/lift_icon.png",
+      iconUrl:"https://image.flaticon.com/icons/png/512/2444/2444517.png",
       shadowUrl: "/shadow_icon.png",
       iconSize: [40,40],
       shadowSize: [35,35],

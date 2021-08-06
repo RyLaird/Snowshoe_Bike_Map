@@ -12,7 +12,7 @@ var host = "localhost:5432"
 var database = "snowshoe"
 var conString = "postgres://"+username+":"+password+"@"+host+"/"+database;
 
-var testQuery = "SELECT row_to_json(fc) FROM (SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type, ST_AsGeoJSON(lg.geom)::json As geometry,row_to_json((gid, name, difficulty, descriptio, closed)) As properties FROM snowshoetrails As lg) As f) As fc"
+var testQuery = "SELECT row_to_json(fc) FROM (SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type, ST_AsGeoJSON(lg.geom)::json As geometry,row_to_json((gid, name, difficulty, descriptio, closed, message)) As properties FROM snowshoetrails As lg) As f) As fc"
 
 
 /* GET home page. */
@@ -117,6 +117,33 @@ router.post('/updateDifficulty', function(req, res) {
     }
   });
 });
+
+router.post('/createFeature', function(req, res) {
+  console.log(req.body)
+  const feature = [req.body.featname, req.body.ftype, req.body.featlocationLat, req.body.featlocationLng]
+  const featureQuery = "INSERT INTO features (name, type, geom) VALUES ($1, $2, ST_SetSRID(ST_MakePoint($3, $4), 4326))";
+  pool.query(featureQuery, feature, function(err, result) {
+    if(err) {
+      console.error(err)
+    }
+    else {
+      res.status(200).send({message: "New Feature was added!"})
+    }
+  });
+});
+
+router.post('/createEmergency', function(req, res) {
+  console.log(req.body)
+  const emergency = [req.body.type, req.body.emerglocationLat, req.body.emerglocationLng]
+  const emergencyQuery = "INSERT INTO emergency (type, geom) VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326))";
+  pool.query(emergencyQuery, emergency, function(err, result) {
+    if(err) {
+      console.error(err)
+    } else {
+      res.status(200).send({message: "New Emergency location was added!"})
+    }
+  })
+} )
 
 
 

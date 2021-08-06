@@ -12,7 +12,7 @@ block content
         div(name='statusButton', id = "updateStatus") Update Trail Status
         div(name='difficultyButton', id="updateDifficulty") Update Trail Difficulty      
         div(name='featureadd', id='featureadd') Create New Feature 
-        div(name='updateEmergency', id='emergencyadd') Update Emergency Access
+        div(name='updateEmergency', id='emergencyadd') Create Emergency Access
 
   #statusDiv
     a.close(id="closeButtonTrail")
@@ -44,26 +44,30 @@ block content
       input(type='submit', name='submit', value='Submit')
   #newFeature
     a.close(id="closeButtonFeat")
-    form(action='/statusupdate' method='POST')
-        label(for='fname') First Name
-        |     
-        input#fname(type='text', name='firstname', placeholder='Your name..')
-        |     
-        label(for='lname') Last Name
-        |     
-        input#lname(type='text', name='lastname', placeholder='Your last name..')
-        
+    form(action='/createFeature' method='POST')
         label(for='featureName') Feature Name
-        
         input#featname(type='text', name='featname', placeholder='Big Jump....')
-        
         label(for='featuretype') Feature Type
-        
         select#featureType(name='ftype' required)
           option(value='Jump') Jump      
-          option(value='Wood Ramp') Wood                 
-          |     
+          option(value='Wood Ramp') Wood
+          option(value='Bike Repair') Bike Repair Station
+          option(value='Bike Wash') Bike Wash Station
+        label(for='featureLocation') Place Feature Point
+        input#featureLocationLat(type='text', name='featlocationLat', placeholder='Move cursor on map to populate')
+        input#featureLocationLng(type='text', name='featlocationLng', placeholder='Move cursor on map to populate')                      
         input(type='submit', value='Submit')
+  #newEmergency 
+    a.close(id="closeButtonEmerg")
+    form(action='/createEmergency' method='POST')
+      label(for='emergencytype') Emergency Type
+      select#emergencyType(name='emergtype' required)
+        option(value='First Aid Station') First Aid Station
+        option(value='Crash Pickup Zone') Crash Pickup Zone
+      label(for='emergencylocation') Place Emergency Point
+      input#emergLocationLat(type='text', name='emerglocationLat', placeholder='Move cursor on map to populate')
+      input#emergLocationLng(type='text', name='emerglocationLng', placeholder='Move cursor on map to populate')
+      input(type='submit', value='Submit')
 
   #map
   script.
@@ -87,13 +91,62 @@ block content
       }
     });
 
+
+    var featureMarker
     var updateFeature = document.querySelector('#featureadd');
+    var featLocLat = document.querySelector('#featureLocationLat');
+    var featLocLng = document.querySelector('#featureLocationLng');
+
     fa = document.querySelector('#newFeature')
     updateFeature.addEventListener('click', ()=>{
       if (fa.style.display == 'none') {
         fa.style.display = 'block';
+        featureMarker = new L.marker([38.41514, -79.98964], {
+          draggable: true,
+          autoPan: true
+        });
+        map.addLayer(featureMarker);
+        featureMarker.bindPopup("Drag to place your feature point");
+        featureMarker.on('mouseover', function (e){
+          this.openPopup()
+        })
+        console.log(featureMarker.getLatLng())
+        console.log(featLocLat)
+        featureMarker.on('dragend', function (e) {
+          featLocLat.value = featureMarker.getLatLng().lat;
+          featLocLng.value = featureMarker.getLatLng().lng;
+        })
       } else {
         fa.style.display = 'none';
+      }
+    });
+
+    var emergMarker
+    var updateEmergency = document.querySelector('#emergencyadd');
+    var emergLocLat = document.querySelector('#emergLocationLat');
+    var emergLocLng = document.querySelector('#emergLocationLng')
+
+    ea = document.querySelector('#newEmergency')
+    updateEmergency.addEventListener('click', ()=> {
+      if (ea.style.display == 'none') {
+        ea.style.display = 'block';
+        emergMarker = new L.marker([38.41514, -79.98964], {
+          draggable: true,
+          autoPan: true
+        });
+        map.addLayer(emergMarker);
+        emergMarker.bindPopup("Drag to place the emergency point");
+        emergMarker.on('mouseover', function (e){
+          this.openPopup()
+        })
+        console.log(emergMarker.getLatLng())
+        console.log(emergLocLat)
+        emergMarker.on('dragend', function (e) {
+          emergLocLat.value = emergMarker.getLatLng().lat;
+          emergLocLng.value = emergMarker.getLatLng().lng;
+        })
+      } else {
+        ea.style.display = 'none';
       }
     });
 
@@ -102,18 +155,30 @@ block content
       sl.style.display = 'none'
       fa.style.display = 'none'
       ud.style.display = 'none'
+      ea.style.display = 'none'
     });
     var featClose = document.querySelector('#closeButtonFeat');
     featClose.addEventListener('click', ()=>{
+      map.removeLayer(featureMarker)
       fa.style.display = 'none'
       sl.style.display = 'none'
       ud.style.display = 'none'
+      ea.style.display = 'none'
     });
     var diffClose = document.querySelector('#closeButtonDifficulty');
     diffClose.addEventListener('click', ()=>{
       ud.style.display = 'none'
       sl.style.display = 'none'
       fa.style.display = 'none'
+      ea.style.display = 'none'
+    });
+    var emergClose = document.querySelector('#closeButtonEmerg');
+    emergClose.addEventListener('click', ()=>{
+      map.removeLayer(emergMarker)
+      ea.style.display = 'none'
+      fa.style.display = 'none'
+      sl.style.display = 'none'
+      ud.style.display = 'none'
     })
       var myData = !{JSON.stringify(jsonData)};
     // Create variable to hold map element, give initial settings to map
