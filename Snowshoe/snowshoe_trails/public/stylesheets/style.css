@@ -35,7 +35,7 @@ a {
   z-index: 1;
 }
 
-ul {
+ul:not(.popup-content) {
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -43,7 +43,7 @@ ul {
   background-color: #333;
 }
 
-li {
+li:not(.open, .popup-overlay, .popup-content, .close) {
   float: left;
 }
 
@@ -51,7 +51,7 @@ li a, .dropbtn {
   display: inline-block;
   color: white;
   text-align: center;
-  padding: 14px 16px;
+  padding: 12px 12px;
   text-decoration: none;
 }
 
@@ -59,11 +59,11 @@ li a:hover, .dropdown:hover .dropbtn {
   background-color: rgb(34, 148, 201);
 }
 
-li.dropdown {
+li.dropdown:not(.open, .popup-overlay, .popup-content, .close) {
   display: inline-block;
 }
 
-.dropdown-content {
+.dropdown-content:not(.open, .popup-overlay, .popup-content, .close) {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
@@ -72,7 +72,7 @@ li.dropdown {
   z-index: 100;
 }
 
-.dropdown-content a, .dropdown-content div{
+.dropdown-content a, .dropdown-content div:not(.popup-content){
   color: black;
   padding: 12px 16px;
   text-decoration: none;
@@ -82,12 +82,12 @@ li.dropdown {
 
 .dropdown-content a:hover, .dropdown-content div:hover {background-color: #f1f1f1;}
 
-.dropdown:hover .dropdown-content {
+.dropdown:hover .dropdown-content:not(.open, .popup-overlay, .popup-content, .close) {
   display: block;
 }
 
 h1,
-h2,
+h2:not(.popup-content),
 h3 {
   font-family: "Raleway", sans-serif;
   text-transform: uppercase;
@@ -178,7 +178,7 @@ a, div {
   align-items: center;
 
   height: 55px;
-  width: 150px;
+  width: 300px;
 
   background: #fa4141;
 
@@ -300,6 +300,11 @@ input[type=submit]:hover {
   bottom:3px;
 }
 
+.legend right {
+  position:relative;
+  left: 100px;
+}
+
 .legend i {
   width: 40px;
   height: 5px;
@@ -319,4 +324,31 @@ input[type=submit]:hover {
 
 .leaflet-popup-conetent {
   font-family: Tahoma, Arial, sans-serif
+}
+
+.popup-overlay {
+  /*Hides pop-up when there is no "active" class*/
+  visibility: hidden;
+  position: absolute;
+  background: #ffffff;
+  border: 3px solid #666666;
+  width: 600px;
+  height: 550px;
+  left: 25%;
+}
+
+.popup-overlay.active {
+  /*displays pop-up when "active" class is present*/
+  visibility: visible;
+  text-align: center;
+}
+
+.popup-content {
+  /*Hides pop-up content when there is no "active" class */
+  visibility: hidden;
+}
+
+.popup-content.active {
+  /*Shows pop-up content when "active" class is present */
+  visibility: visible;
 }

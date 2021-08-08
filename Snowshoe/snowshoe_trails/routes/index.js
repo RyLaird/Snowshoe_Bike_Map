@@ -14,6 +14,9 @@ var conString = "postgres://"+username+":"+password+"@"+host+"/"+database;
 
 var testQuery = "SELECT row_to_json(fc) FROM (SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type, ST_AsGeoJSON(lg.geom)::json As geometry,row_to_json((gid, name, difficulty, descriptio, closed, message)) As properties FROM snowshoetrails As lg) As f) As fc"
 
+var featureGet = "SELECT row_to_json(fc) FROM (SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type, ST_AsGeoJSON(lg.geom)::json As geometry, row_to_json((name, type)) As properties FROM features as lg) As f) as fc"
+
+var emergencyGet = "SELECT row_to_json(fc) FROM (SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type, ST_AsGeoJSON(lg.geom)::json As geometry, row_to_json((type, geom)) As properties FROM emergency as lg) as f) as fc"
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -26,16 +29,34 @@ module.exports = router;
 router.get('/data', function (req, res) {
   var client = new Client(conString);
   client.connect();
-  var query = client.query(new Query(testQuery));
+  var query = client.query(new Query(emergencyGet));
   query.on("row", function (row, result) {
       result.addRow(row);
   });
   query.on("end", function (result) {
-      res.send(result.rows[0].row_to_json);
+    emergdata = result.rows[0].row_to_json
+      res.send(emergdata);
       res.end();
   });
 });
 
+// send feature table geojson to /map view
+// router.get('/map', function (req, res) {
+//   var client = new Client(conString);
+//   client.connect();
+//   var query = client.query(new Query(featureGet));
+//   query.on("row", function (row, result) {
+//       result.addRow(row);
+//   });
+//   query.on("end", function (result) {
+//     featdata = result.rows[0].row_to_json
+//       res.send(featdata);
+//       res.end();
+//   });
+// });
+
+var featdata
+var emergdata
 /* GET map page */
 router.get('/map', function(req, res) {
   var client = new Client(conString); // Setup Postgres Client
@@ -44,12 +65,29 @@ router.get('/map', function(req, res) {
   query.on("row", function (row, result) {
       result.addRow(row);
   });
+  var featQuery = client.query(new Query(featureGet));
+  featQuery.on("row", function (row, result) {
+    result.addRow(row);
+  });
+  featQuery.on("end", function (result) {
+    featdata = result.rows[0].row_to_json //save JSON from feature table as variable data
+  });
+
+  var emergQuery = client.query(new Query(emergencyGet));
+  emergQuery.on("row", function (row, result) {
+    result.addRow(row);
+  });
+  emergQuery.on("end", function (result) {
+    emergdata = result.rows[0].row_to_json //save JSON from emergency table as variable data
+  });
   // Pass the result to the map page
   query.on("end", function (result) {
       var data = result.rows[0].row_to_json // Save the JSON as variable data
       res.render('map', {
           title: "Rider Map", // Give a title to our page
-          jsonData: data // Pass data to the View
+          jsonData: data, // Pass data to the View
+          featData: featdata,
+          emergData: emergdata
       });
   });
 });
@@ -63,6 +101,21 @@ router.get('/employee', function(req, res) {
   query.on("row", function (row, result) {
     result.addRow(row);
   });
+  var featQuery = client.query(new Query(featureGet));
+  featQuery.on("row", function (row, result) {
+    result.addRow(row);
+  });
+  featQuery.on("end", function (result) {
+    featdata = result.rows[0].row_to_json //save JSON from feature table as variable data
+  });
+
+  var emergQuery = client.query(new Query(emergencyGet));
+  emergQuery.on("row", function (row, result) {
+    result.addRow(row);
+  });
+  emergQuery.on("end", function (result) {
+    emergdata = result.rows[0].row_to_json //save JSON from emergency table as variable data
+  });
   //Pass result to employee page
   query.on("end", function (result) {
     var data =result.rows[0].row_to_json
@@ -70,7 +123,9 @@ router.get('/employee', function(req, res) {
     res.render('employee', {
       title: "Employee Map",
       jsonData: data,
-      trails: data['features']
+      trails: data['features'],
+      featData: featdata,
+      emergData: emergdata
     });
   });
 });
@@ -96,7 +151,7 @@ router.post('/updateStatus', function(req,res) {
       console.error(err)
     }
     else {
-      res.status(200).send({ message: "Trail Updated Successfully!" });
+      res.render('status', { title: 'Trail Updated Successfully!' })
       // res.redirect('/employee')
     }
 
@@ -113,34 +168,35 @@ router.post('/updateDifficulty', function(req, res) {
       console.error(err)
     }
     else {
-      res.status(200).send({message: "Trail Updated Succesfully!"})
+      res.render('difficulty', { title: 'Trail Updated Successfully!' })
     }
   });
 });
 
 router.post('/createFeature', function(req, res) {
   console.log(req.body)
-  const feature = [req.body.featname, req.body.ftype, req.body.featlocationLat, req.body.featlocationLng]
+  const feature = [req.body.featname, req.body.ftype, req.body.featlocationLng, req.body.featlocationLat]
   const featureQuery = "INSERT INTO features (name, type, geom) VALUES ($1, $2, ST_SetSRID(ST_MakePoint($3, $4), 4326))";
   pool.query(featureQuery, feature, function(err, result) {
     if(err) {
       console.error(err)
     }
     else {
-      res.status(200).send({message: "New Feature was added!"})
+      // res.status(200).send({message: "New Feature was added!"})
+      res.render('feature', { title: 'New Feature Added' })
     }
   });
 });
 
 router.post('/createEmergency', function(req, res) {
   console.log(req.body)
-  const emergency = [req.body.type, req.body.emerglocationLat, req.body.emerglocationLng]
+  const emergency = [req.body.emergtype, req.body.emerglocationLng, req.body.emerglocationLat]
   const emergencyQuery = "INSERT INTO emergency (type, geom) VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326))";
   pool.query(emergencyQuery, emergency, function(err, result) {
     if(err) {
       console.error(err)
     } else {
-      res.status(200).send({message: "New Emergency location was added!"})
+      res.render('emergency', { title: 'New Emergency Location Added' })
     }
   })
 } )

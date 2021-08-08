@@ -24,10 +24,64 @@ block content
       .dropdown-content   
         div(name='location', id='location') Find My Location
         div(name='location', id='reset') Remove Location
-      
+    li.dropdown
+      a.dropbtn(href='javascript:void(0)') Safety
+      .dropdown-content
+        div(class='open') View Safety Information
+        div(class="popup-overlay")
+          div(class="popup-content")
+            h2 BIKE PARK SAFETY
+            p IN CASE OF AN ACCIDENT CALL 304.572.5400 or alert any Snowshoe employee
+            br
+            p The Snowshoe Bike Park is intended for downhill mountain biking and consists of trails that contain naturally rugged terrain and man made and natural features. A downhill specific mountain bike is recommended when riding the Snowshoe Bike Park. All riders must possess a valid ticket or pass to enter the Bike Park. Before riding, always inspect your equipment or have it checked by a qualified mechanic.
+            br
+            ol 
+              li Ride under control, within your ability, and in such a manner that you can stop or avoid other people and objects.
+              li Keep off all closed trails and closed areas; stay on marked trails.
+              li Read and obey all signs and warnings.
+              li Inspect trails and features before using or attempting.
+              li Do not stop where you obstruct a trail or are not visible from above or to other riders.
+              li Stop and look both ways before crossing roads.
+              li People ahead of you have the right of way. It is your responsibility to avoid them.
+              li Helmets are required while riding on Snowshoe Mountain trails.
+              li You should have sufficient physical dexterity, ability and knowledge to safely load, ride and unload the lift, and to ride the trails and features you choose.
+              li Respect Snowshoe Mountain, its employees, other guests and property.
+              br
+              br
+              br
+              br
+              br
+              br
+              br
+              br
+              br
+            br
+            br
+            br
+            br
+            br
+            button(class="closeSafety") Acknowledge and Close
   div#map
   script.
+    window.onload = function() {
+      if(!window.location.hash) {
+        window.location = window.location + '#loaded';
+        window.location.reload();
+      }
+    };
+        //appends an "active" class to .popup and .popup-content when the "Open" button is clicked
+    $(".open").on("click", function() {
+      $(".popup-overlay, .popup-content").addClass("active");
+    });
+
+    //removes the "active" class to .popup and .popup-content when the "Close" button is clicked 
+    $(".close, .popup-overlay").on("click", function() {
+      $(".popup-overlay, .popup-content").removeClass("active");
+    });
+
     var myData = !{JSON.stringify(jsonData)};
+    var featData = !{JSON.stringify(featData)};
+    var emergData = !{JSON.stringify(emergData)};
     // Create variable to hold map element, give initial settings to map
       var map = L.map('map',{ center: [38.41514, -79.98964], zoom: 15});
       // Add OpenStreetMap tile layer to map element
@@ -79,22 +133,89 @@ block content
             case 'Ballhooter Bike Lift': return {color: "#bbbdbf", weight: 7};
           }
         }
-      }).addTo(map);
+      }).bringToBack().addTo(map);
 
-      //- LatLng = [
-      //-   [-79.98392343521118, 38.41474476109837],
-      //-   [-79.99456644058228,38.411230799050685]
-      //- ];
-      //- var liftPoly = L.polyline(LatLng, {color:"#bbbdbf", weight: 7
-      //-         }).addTo(map)
-      //- var decorator = L.polylineDecorator(liftPoly, {
-      //-   patterns: [
-      //-   // defines a pattern of 10px-wide dashes, repeated every 20px on the line
-      //-   {offset: 0, repeat: 5, symbol: L.Symbol.dash({pixelSize: 5})}
-      //-   ]
-      //- }).addTo(map);
 
-      // set variable for all trails
+      //icons for features
+      var jumpIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/2618/2618845.png',
+        iconSize: [45,45]
+      });
+      var woodIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/2948/2948264.png',
+        iconSize: [25,25]
+      });
+      var repairIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/5265/5265429.png',
+        iconSize: [35,35]
+      });
+      var washIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/2709/2709415.png',
+        iconSize: [35,35]
+      });
+
+      // adding feature geojson from features table
+      L.geoJson(featData,{
+          onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.f1)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            var latLngs = [this.getLatLng()];
+            var markerBounds = L.latLngBounds(latLngs);
+            map.fitBounds(markerBounds);
+          });
+        },
+        pointToLayer: function (feature, latlng) {
+          console.log(feature.geometry.coordinates)
+          switch (feature.properties.f2) {
+            case 'Jump': return L.marker(latlng, {icon:jumpIcon});
+            case 'Wood Ramp': return L.marker(latlng, {icon:woodIcon});
+            case 'Bike Repair': return L.marker(latlng, {icon:repairIcon});
+            case 'Bike Wash': return L.marker(latlng, {icon:washIcon});
+          }
+        }
+      }).bringToFront().addTo(map);
+
+
+      //icons for emergency 
+      var aidIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/5335/5335736.png',
+        iconSize: [35,35]
+      });
+      var crashIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/2996/2996353.png',
+        iconSize: [35,35]
+      });
+      //- adding features from emergency table
+      L.geoJson(emergData,{
+          onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.f1 +  "<br>" + "For accidents - call 304-572-5400")
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            var latLngs = [this.getLatLng()];
+            var markerBounds = L.latLngBounds(latLngs);
+            map.fitBounds(markerBounds);
+          });
+        },
+        pointToLayer: function(feature, latlng) {
+          console.log(feature.geometry.coordinates)
+          switch (feature.properties.f1) {
+            case 'First Aid Station': return L.marker(latlng, {icon:aidIcon});
+            case 'Crash Pickup Zone': return L.marker(latlng, {icon:crashIcon});
+          }
+        }
+      }).bringToFront().addTo(map);
+
       allTrails = L.geoJson(myData,{
           onEachFeature: function (feature, layer) {
             layer.bindPopup((feature.properties.f2.bold()).toUpperCase() + "\n" + "<font color='#808080'><i> Skill Level:</i></font>"+ feature.properties.f3 + "<font color='#808080'><i>  Status:</i></font>" + feature.properties.f6, {
@@ -113,10 +234,10 @@ block content
           style: function(feature) {
             if (feature.properties.f5 == 'open') {
               switch (feature.properties.f3) {
-                case 'beginner': return {color: "#33a448", weight: 2};
-                case 'intermediate' : return {color: "#3356a4", weight: 2};
-                case 'advanced': return {color: "#030904", weight: 2};
-                case 'expert': return {color:"#a4338f", weight: 2};
+                case 'beginner': return {color: "#33a448", weight: 2, opacity: .6};
+                case 'intermediate' : return {color: "#3356a4", weight: 2, opacity: .6};
+                case 'advanced': return {color: "#030904", weight: 2, opacity: .6};
+                case 'expert': return {color:"#a4338f", weight: 2, opacity: .6};
               }
             } else {
               return {color: "#BB061C", weight: 2};
@@ -126,6 +247,10 @@ block content
     //-query dropdown and add all trails to map on All 
     let allTrailsDrop = document.querySelector('#all');
     allTrailsDrop.addEventListener('click',()=>{
+      map.removeLayer(beginnerTrails)
+      map.removeLayer(intermediateTrails)
+      map.removeLayer(advancedTrails)
+      map.removeLayer(expertTrails)
       allTrails.addTo(map)
     });
 
@@ -152,7 +277,7 @@ block content
         style: function (feature) {
           if (feature.properties.f5 == 'open') {
             switch (feature.properties.f3) {
-              case 'beginner': return {color: "#33a448"};
+              case 'beginner': return {color: "#33a448", weight: 3};
             }
           } else {
             return {color: "#BB061C", weight: 2};
@@ -187,8 +312,12 @@ block content
           });
           },
         style: function (feature) {
-          switch (feature.properties.f3) {
-            case 'intermediate': return {color: "#3356a4"};
+          if (feature.properties.f5 == 'open') {
+            switch (feature.properties.f3) {
+              case 'intermediate': return {color: "#3356a4", weight: 3};
+            }
+          } else {
+            return {color: "#BB061C", weight: 2};
           }
         }
       });
@@ -220,8 +349,12 @@ block content
           });
           },
         style: function (feature) {
-          switch (feature.properties.f3) {
-            case 'advanced': return {color: "#030904"};
+          if (feature.properties.f5 == 'open') {
+            switch (feature.properties.f3) {
+              case 'advanced': return {color: "#030904", weight: 3};
+            }
+          } else  {
+            return {color: "#BB061C", weight: 2};
           }
         }
       });
@@ -253,8 +386,12 @@ block content
           });
           },
         style: function (feature) {
-          switch (feature.properties.f3) {
-            case 'expert': return {color: "#a4338f"};
+          if (feature.properties.f5 == 'open') {
+            switch (feature.properties.f3) {
+              case 'expert': return {color: "#a4338f", weight: 3};
+            }
+          } else {
+            return {color: "#BB061C", weight: 2};
           }
         }
       });
@@ -308,38 +445,76 @@ block content
 
     legend.onAdd = function(map) {
       var div = L.DomUtil.create("div", "legend");
-      //- div.innerHTML += "<h4>Showshoe </h4>";
+      //- div.innerHTML += '<right style="font-size:30px;cursor:pointer" onclick="closeNav()">&#9776;</right><br>'
+      //- div.innerHTML += '<img src="https://image.flaticon.com/icons/png/512/5335/5335736.png" height="30" width="30"> <span>First Aid</span> <br>'
       div.innerHTML += '<i style="background: #bbbdbf"></i><span>Bike Lift</span><br>';
+      div.innerHTML += "<h4>Trails</h4>";
       div.innerHTML += '<i style="background: #BB061C"></i><span>Closed</span><br>';
       div.innerHTML += '<i style="background: #1ae582"></i><span>Beginner</span><br>';
       div.innerHTML += '<i style="background: #2441db"></i><span>Intermediate</span><br>';
       div.innerHTML += '<i style="background: #2b0600"></i><span>Advanced</span><br>';
-      div.innerHTML += '<i style="background: #670068"></i><span>Expert</span><br>';
-      //- div.innerHTML += '<i class="icon" style="background-image: url(https://d30y9cdsu7xlg0.cloudfront.net/png/194515-200.png);background-repeat: no-repeat;"></i><span>Grænse</span><br>';
-      
-      
-
+      div.innerHTML += '<i style="background: #670068"></i><span>Expert</span><br>';      
       return div;
     };
 
     legend.addTo(map);
 
+    function closeNav() {
+      document.getElementsByClassName(".legend").style.width = "0";
+    }
     //- add lift icons along lift path
     var liftIcon = L.icon({
       iconUrl:"https://image.flaticon.com/icons/png/512/2444/2444517.png",
-      shadowUrl: "/shadow_icon.png",
-      iconSize: [40,40],
-      shadowSize: [35,35],
-      shadowAnchor: [4,25],
-      popupAnchor: [3,20]
+      iconSize: [30,30]
+      //- shadowSize: [35,35],
+      //- shadowAnchor: [4,25],
+      //- popupAnchor: [3,20]
     });
 
-    L.marker([-79.98403072357178,38.41467750984024], {icon: liftIcon}).addTo(map);
-    L.marker([-79.98579025268555,38.41412268457233], {icon: liftIcon}).addTo(map);
-    L.marker([-79.98795747756957,38.413450163384084], {icon: liftIcon}).addTo(map);
-    L.marker([-79.9901032447815,38.41272719612521], {icon: liftIcon}).addTo(map);
-    L.marker([-79.99244213104248,38.41190334089571], {icon: liftIcon}).addTo(map);
-    L.marker([-79.99435186386108,38.411230799050685], {icon: liftIcon}).addTo(map);
+    //- L.marker([-79.98403072357178,38.41467750984024], {icon: liftIcon}).addTo(map);
+    var liftStart = L.marker([38.41467750984024,-79.98403072357178], {icon: liftIcon});
+    map.addLayer(liftStart);
+    liftStart.bindPopup('Bike Lift Entrance');
+    liftStart.on('mouseover', function (e) {
+      this.openPopup()
+    });
+    liftStart.on('mouseout', function (e) {
+    this.closePopup();
+    });
+
+    var liftTop = L.marker([38.411230799050685,-79.99435186386108], {icon: liftIcon});
+    map.addLayer(liftTop);
+    liftTop.bindPopup('Bike Lift Drop-Off');
+    liftTop.on('mouseover', function (e) {
+      this.openPopup()
+    });
+    liftTop.on('mouseout', function (e) {
+      this.closePopup();
+    });
+    
+
+    //- layer.on('mouseover', function (e) {
+    //-   this.openPopup()
+    //- });
+    //- layer.on('mouseout', function (e) {
+    //-   this.closePopup();
+    //- });
+    //- layer.on('click', function (e) {
+    //-   var latLngs = [this.getLatLng()];
+    //-   var markerBounds = L.latLngBounds(latLngs);
+    //-   map.fitBounds(markerBounds);
+    //- });
+
+    //- L.marker([38.41467750984024,-79.98403072357178], {icon: liftIcon}).addTo(map);
+    //- L.marker([-79.98579025268555,38.41412268457233], {icon: liftIcon}).addTo(map);
+    //- L.marker([38.41412268457233,-79.98579025268555], {icon: liftIcon}).addTo(map);
+    //- L.marker([-79.98795747756957,38.413450163384084], {icon: liftIcon}).addTo(map);
+    //- L.marker([-79.9901032447815,38.41272719612521], {icon: liftIcon}).addTo(map);
+    //- L.marker([-79.99244213104248,38.41190334089571], {icon: liftIcon}).addTo(map);
+    //- L.marker([-79.99435186386108,38.411230799050685], {icon: liftIcon}).addTo(map);
+    //- L.marker([38.411230799050685,-79.99435186386108], {icon: liftIcon}).addTo(map);
+
+    
 
 
 

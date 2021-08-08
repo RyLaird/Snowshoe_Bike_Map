@@ -1,0 +1,23 @@
+extends layout
+block content
+	ul
+		li
+			a(href='/') Home
+		li.dropdown
+			a.dropbtn(href='javascript:void(0)') Map View
+			.dropdown-content
+				a(href='/map') Rider
+				a(href='/employee') Employee Login
+	div#root
+		h1.Banner Snowshoe Bike Park
+		div.Message
+			div.Title
+				h3 You have successfully updated the trail status!
+		br
+		br
+		br
+		div.NavButtons
+			a(href="/employee")
+				div.NavButton Return to Employee View
+			a(href='/map')
+				div.NavButton Return to Rider View

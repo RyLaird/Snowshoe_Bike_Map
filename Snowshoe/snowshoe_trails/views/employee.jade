@@ -71,6 +71,12 @@ block content
 
   #map
   script.
+    window.onload = function() {
+      if(!window.location.hash) {
+        window.location = window.location + '#loaded';
+        window.location.reload();
+      }
+    };
     var updateStatus = document.querySelector('#updateStatus');
     sl = document.querySelector('#statusDiv')
     updateStatus.addEventListener('click',()=>{
@@ -106,9 +112,9 @@ block content
           autoPan: true
         });
         map.addLayer(featureMarker);
-        featureMarker.bindPopup("Drag to place your feature point");
+        featureMarker.bindTooltip("Drag to place your feature point");
         featureMarker.on('mouseover', function (e){
-          this.openPopup()
+          this.openTooltip()
         })
         console.log(featureMarker.getLatLng())
         console.log(featLocLat)
@@ -135,9 +141,9 @@ block content
           autoPan: true
         });
         map.addLayer(emergMarker);
-        emergMarker.bindPopup("Drag to place the emergency point");
+        emergMarker.bindTooltip("Drag to place the emergency point");
         emergMarker.on('mouseover', function (e){
-          this.openPopup()
+          this.openTooltip()
         })
         console.log(emergMarker.getLatLng())
         console.log(emergLocLat)
@@ -181,6 +187,8 @@ block content
       ud.style.display = 'none'
     })
       var myData = !{JSON.stringify(jsonData)};
+      var featData = !{JSON.stringify(featData)};
+      var emergData = !{JSON.stringify(emergData)};
     // Create variable to hold map element, give initial settings to map
       var map = L.map('map',{ center: [38.41514, -79.98964], zoom: 15});
       // Add OpenStreetMap tile layer to map element
@@ -188,13 +196,136 @@ block content
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       }).addTo(map);
 
-      console.log(myData)
+      //- console.log(myData)
+      var lift = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "name": "Ballhooter Bike Lift"
+          },
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                -79.98392343521118,
+                38.41474476109837
+              ],
+              [
+                -79.99456644058228,
+                38.411230799050685
+              ]
+            ]
+          }
+        }
+      ]
+    }
+
+      L.geoJson(lift,{
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.name)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            this.fitBounds(this.getBounds())
+          });
+        },
+        style: function(feature) {
+          switch (feature.properties.name) {
+            case 'Ballhooter Bike Lift': return {color: "#bbbdbf", weight: 7};
+          }
+        }
+      }).bringToBack().addTo(map);
+
+      var jumpIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/2618/2618845.png',
+        iconSize: [45,45]
+      });
+      var woodIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/2948/2948264.png',
+        iconSize: [25,25]
+      });
+      var repairIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/5265/5265429.png',
+        iconSize: [35,35]
+      });
+      var washIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/2709/2709415.png',
+        iconSize: [35,35]
+      });
+
+      L.geoJson(featData,{
+          onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.f1)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            var latLngs = [this.getLatLng()];
+            var markerBounds = L.latLngBounds(latLngs);
+            map.fitBounds(markerBounds);
+          });
+        },
+        pointToLayer: function (feature, latlng) {
+          console.log(feature.geometry.coordinates)
+          switch (feature.properties.f2) {
+            case 'Jump': return L.marker(latlng, {icon:jumpIcon});
+            case 'Wood Ramp': return L.marker(latlng, {icon:woodIcon});
+            case 'Bike Repair': return L.marker(latlng, {icon:repairIcon});
+            case 'Bike Wash': return L.marker(latlng, {icon:washIcon});
+          }
+        }
+      }).bringToFront().addTo(map);
+
+      var aidIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/5335/5335736.png',
+        iconSize: [35,35]
+      });
+      var crashIcon = L.icon ({
+        iconUrl: 'https://image.flaticon.com/icons/png/512/2996/2996353.png',
+        iconSize: [35,35]
+      });
+
+      L.geoJson(emergData,{
+          onEachFeature: function (feature, layer) {
+          layer.bindPopup(feature.properties.f1)
+          layer.on('mouseover', function (e) {
+            this.openPopup()
+          });
+          layer.on('mouseout', function (e) {
+            this.closePopup();
+          });
+          layer.on('click', function (e) {
+            var latLngs = [this.getLatLng()];
+            var markerBounds = L.latLngBounds(latLngs);
+            map.fitBounds(markerBounds);
+          });
+        },
+        pointToLayer: function(feature, latlng) {
+          console.log(feature.geometry.coordinates)
+          switch (feature.properties.f1) {
+            case 'First Aid Station': return L.marker(latlng, {icon:aidIcon});
+            case 'Crash Pickup Zone': return L.marker(latlng, {icon:crashIcon});
+          }
+        }
+      }).bringToFront().addTo(map);
+
 
 
       // set variable for all trails
-      L.geoJson(myData,{
+      allTrails = L.geoJson(myData,{
           onEachFeature: function (feature, layer) {
-            layer.bindPopup(feature.properties.f2)
+            layer.bindPopup((feature.properties.f2.bold()).toUpperCase() + "\n" + "<font color='#808080'><i> Skill Level:</i></font>"+ feature.properties.f3 + "<font color='#808080'><i>  Status:</i></font>" + feature.properties.f6, {
+              maxWidth: "auto"
+            });
             layer.on('mouseover', function (e) {
               this.openPopup()
             });
@@ -206,12 +337,47 @@ block content
             });
           },
           style: function(feature) {
-            switch (feature.properties.f3) {
-              case 'beginner': return {color: "#1ae582", weight: 2};
-              case 'intermediate' : return {color: "#2441db", weight: 2};
-              case 'advanced': return {color: "#2b0600", weight: 2};
-              case 'expert': return {color:"#670068", weight: 2};
+            if (feature.properties.f5 == 'open') {
+              switch (feature.properties.f3) {
+                case 'beginner': return {color: "#33a448", weight: 2, opacity: .6};
+                case 'intermediate' : return {color: "#3356a4", weight: 2, opacity: .6};
+                case 'advanced': return {color: "#030904", weight: 2, opacity: .6};
+                case 'expert': return {color:"#a4338f", weight: 2, opacity: .6};
+              }
+            } else {
+              return {color: "#BB061C", weight: 2};
             }
           }
-      }).addTo(map);
+      });
+
+      allTrails.addTo(map)
+
+          var liftIcon = L.icon({
+      iconUrl:"https://image.flaticon.com/icons/png/512/2444/2444517.png",
+      iconSize: [30,30]
+      //- shadowSize: [35,35],
+      //- shadowAnchor: [4,25],
+      //- popupAnchor: [3,20]
+    });
+
+    //- L.marker([-79.98403072357178,38.41467750984024], {icon: liftIcon}).addTo(map);
+    var liftStart = L.marker([38.41467750984024,-79.98403072357178], {icon: liftIcon});
+    map.addLayer(liftStart);
+    liftStart.bindPopup('Bike Lift Entrance');
+    liftStart.on('mouseover', function (e) {
+      this.openPopup()
+    });
+    liftStart.on('mouseout', function (e) {
+    this.closePopup();
+    });
+
+    var liftTop = L.marker([38.411230799050685,-79.99435186386108], {icon: liftIcon});
+    map.addLayer(liftTop);
+    liftTop.bindPopup('Bike Lift Drop-Off');
+    liftTop.on('mouseover', function (e) {
+      this.openPopup()
+    });
+    liftTop.on('mouseout', function (e) {
+      this.closePopup();
+    });
 
